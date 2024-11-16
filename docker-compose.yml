@@ -8,11 +8,25 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: "mongodb://monty:pass@db:27017/mydatabase?authSource=admin&directConnection=true"
-  db: 
-    image: prismagraphql/mongo-single-replica:5.0.3
-    ports:
-      - '27017:27017'
+      DATABASE_URL: "postgresql://postgres:pass@db:5432/mydatabase"
+  db:
+    image: postgres
     environment:
-      MONGO_INITDB_ROOT_USERNAME: monty
-      MONGO_INITDB_ROOT_PASSWORD: pass
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"  # Ensure this is correct
+    volumes:
+      - db_data:/var/lib/postgresql/data
+  prisma-migrate:
+    build: .
+    command: ["npx", "prisma", "migrate", "dev"]
+    environment:
+      DATABASE_URL: "postgresql://postgres:pass@db:5432/mydatabase?schema=public"
+    depends_on:
+      - db
+    restart: "no"
+
+volumes:
+  db_data: 

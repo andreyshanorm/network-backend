@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  id          Int       @id @default(autoincrement())
   email       String    @unique
   password    String
   name        String?
@@ -18,44 +18,46 @@ model User {
   updatedAt   DateTime  @updatedAt
   bio         String?
   location    String?
-  posts       Post[]
-  likes       Like[]
   comments    Comment[]
-  followers   Follows[] @relation("following")
   following   Follows[] @relation("follower")
+  followers   Follows[] @relation("following")
+  likes       Like[]
+  posts       Post[]
 }
 
 model Follows {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  follower    User   @relation("follower", fields: [followerId], references: [id])
-  followerId  String @db.ObjectId
-  following   User   @relation("following", fields: [followingId], references: [id])
-  followingId String @db.ObjectId
+  id          Int  @id @default(autoincrement())
+  followerId  Int
+  followingId Int
+  follower    User @relation("follower", fields: [followerId], references: [id])
+  following   User @relation("following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
 }
 
 model Post {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  id        Int       @id @default(autoincrement())
   content   String
-  author    User      @relation(fields: [authorId], references: [id])
-  authorId  String    @db.ObjectId
-  likes     Like[]
-  comments  Comment[]
+  authorId  Int
   createdAt DateTime  @default(now())
+  comments  Comment[]
+  likes     Like[]
+  author    User      @relation(fields: [authorId], references: [id])
 }
 
 model Like {
-  id     String @id @default(auto()) @map("_id") @db.ObjectId
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @db.ObjectId
-  post   Post   @relation(fields: [postId], references: [id])
-  postId String @db.ObjectId
+  id     Int  @id @default(autoincrement())
+  userId Int
+  postId Int
+  post   Post @relation(fields: [postId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
 }
 
 model Comment {
-  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  id      Int    @id @default(autoincrement())
   content String
-  user    User   @relation(fields: [userId], references: [id])
-  userId  String @db.ObjectId
+  userId  Int
+  postId  Int
   post    Post   @relation(fields: [postId], references: [id])
-  postId  String @db.ObjectId
+  user    User   @relation(fields: [userId], references: [id])
 }
